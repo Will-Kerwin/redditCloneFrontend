@@ -14,7 +14,7 @@ export class SubredditSideBarComponent implements OnInit {
 
   constructor(private subredditService: SubredditService) {
     this.subredditService.getAllSubreddits().subscribe(data => {
-      console.log(data);
+
       if (data.length >= 4) {
         // if more than 4 subreddits concat and adds display all button
         this.subreddits = data.splice(0, 3);
