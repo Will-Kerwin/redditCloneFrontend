@@ -6,6 +6,7 @@ import {LoginRequestPayload} from '../login/login-request.payload';
 import {LoginResponse} from '../login/login-response';
 import {map, tap} from 'rxjs/operators';
 import {LocalStorageService} from 'ngx-webstorage';
+import {RefreshTokenPayload} from './refreshToken.payload';
 
 @Injectable({
   providedIn: 'root'
@@ -33,12 +34,11 @@ export class AuthService {
     }));
   }
 
-  getJwtToken(): any {
-    return this.localStorage.retrieve('authenticationToken');
-  }
+  refreshToken(): Observable<any> {
+    // ! this line is not important however it stops error with invalid token due to sending wrong token in request
+    this.localStorage.clear('authenticationToken');
 
-  refreshToken(): any {
-    const refreshTokenPayload = {
+    const refreshTokenPayload: RefreshTokenPayload = {
       refreshToken: this.getRefreshToken(),
       username: this.getUserName()
     };
@@ -53,6 +53,9 @@ export class AuthService {
       }));
   }
 
+  getJwtToken(): any {
+    return this.localStorage.retrieve('authenticationToken');
+  }
 
   private getUserName(): string {
     return this.localStorage.retrieve('username');
