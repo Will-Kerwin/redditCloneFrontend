@@ -57,11 +57,15 @@ export class AuthService {
     return this.localStorage.retrieve('authenticationToken');
   }
 
-  private getUserName(): string {
+  getUserName(): string {
     return this.localStorage.retrieve('username');
   }
 
   private getRefreshToken(): string {
     return this.localStorage.retrieve('refreshToken');
+  }
+
+  isLoggedIn(): boolean {
+    return this.getJwtToken() != null;
   }
 }
