@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest} from '@angular/common/http';
 import {BehaviorSubject, Observable, throwError} from 'rxjs';
 import {AuthService} from './auth/shared/auth.service';
-import {catchError, switchMap} from 'rxjs/operators';
+import {catchError, filter, switchMap, take} from 'rxjs/operators';
 import {LoginResponse} from './auth/login/login-response';
 
 @Injectable({
@@ -11,13 +11,17 @@ import {LoginResponse} from './auth/login/login-response';
 export class TokenInterceptor implements HttpInterceptor {
 
   isTokenRefreshing = false;
-  // have value so we can set token in subject while processing
   refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject(null);
 
   constructor(public authService: AuthService) {
   }
 
-  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+  intercept(req: HttpRequest<any>, next: HttpHandler):
+    Observable<HttpEvent<any>> {
+
+    if (req.url.indexOf('refresh') !== -1 || req.url.indexOf('login') !== -1) {
+      return next.handle(req);
+    }
     const jwtToken = this.authService.getJwtToken();
 
     if (jwtToken) {
@@ -31,8 +35,8 @@ export class TokenInterceptor implements HttpInterceptor {
       }));
     }
     return next.handle(req);
-  }
 
+  }
 
 
   private handleAuthErrors(req: HttpRequest<any>, next: HttpHandler)
@@ -50,6 +54,15 @@ export class TokenInterceptor implements HttpInterceptor {
             refreshTokenResponse.authenticationToken));
         })
       );
+    } else {
+      return this.refreshTokenSubject.pipe(
+        filter(result => result !== null),
+        take(1),
+        switchMap(() => {
+          return next.handle(this.addToken(req,
+            this.authService.getJwtToken()));
+        })
+      );
     }
   }
 
@@ -59,4 +72,5 @@ export class TokenInterceptor implements HttpInterceptor {
         'Bearer ' + jwtToken)
     });
   }
+
 }

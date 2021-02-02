@@ -24,7 +24,7 @@ export class AuthService {
   login(loginRequestPayload: LoginRequestPayload): Observable<boolean> {
     return this.httpClient.post<LoginResponse>('http://localhost:8080/api/auth/login',
       loginRequestPayload).pipe(map(data => {
-      console.log(data);
+
       this.localStorage.store('authenticationToken', data.authenticationToken);
       this.localStorage.store('username', data.username);
       this.localStorage.store('refreshToken', data.refreshToken);
@@ -35,8 +35,8 @@ export class AuthService {
   }
 
   refreshToken(): Observable<any> {
-    // ! this line is not important however it stops error with invalid token due to sending wrong token in request
-    this.localStorage.clear('authenticationToken');
+   /* // ! this line is not important however it stops error with invalid token due to sending wrong token in request
+    this.localStorage.clear('authenticationToken');*/
 
     const refreshTokenPayload: RefreshTokenPayload = {
       refreshToken: this.getRefreshToken(),
