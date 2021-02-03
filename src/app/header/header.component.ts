@@ -10,7 +10,6 @@ import {AuthService} from '../auth/shared/auth.service';
 })
 export class HeaderComponent implements OnInit {
 
-  faUser = faUser;
   isLoggedIn: boolean;
   username: string;
 
@@ -18,11 +17,17 @@ export class HeaderComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.isLoggedIn = this.authService.isLoggedIn();
-    this.username = this.authService.getUserName();
+    this.authService.loggedIn.subscribe((data: boolean) => this.isLoggedIn = data);
+    this.authService.username.subscribe((data: string) => this.username = data);
   }
 
   goToUserProfile(): void {
     this.router.navigateByUrl(`/user-profile/${this.username}`);
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.isLoggedIn = false;
+    this.router.navigateByUrl('/');
   }
 }

@@ -1,7 +1,7 @@
-import {Injectable} from '@angular/core';
+import {EventEmitter, Injectable, Output} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {SignupRequestPayload} from '../signup/signup-request.payload';
-import {Observable} from 'rxjs';
+import {Observable, throwError} from 'rxjs';
 import {LoginRequestPayload} from '../login/login-request.payload';
 import {LoginResponse} from '../login/login-response';
 import {map, tap} from 'rxjs/operators';
@@ -13,11 +13,19 @@ import {RefreshTokenPayload} from './refreshToken.payload';
 })
 export class AuthService {
 
+  @Output() loggedIn: EventEmitter<boolean> = new EventEmitter();
+  @Output() username: EventEmitter<string> = new EventEmitter();
+
+  refreshTokenPayload: RefreshTokenPayload = {
+    refreshToken: this.getRefreshToken(),
+    username: this.getUserName()
+  };
+
   constructor(private httpClient: HttpClient, private localStorage: LocalStorageService) {
   }
 
   signup(signupRequestPayload: SignupRequestPayload): Observable<any> {
-    return this.httpClient.post('http://localhost:8080/api/auth/signup', signupRequestPayload, { responseType: 'text' });
+    return this.httpClient.post('http://localhost:8080/api/auth/signup', signupRequestPayload, {responseType: 'text'});
   }
 
 
@@ -30,14 +38,27 @@ export class AuthService {
       this.localStorage.store('refreshToken', data.refreshToken);
       this.localStorage.store('expiresAt', data.expiresAt);
 
+      this.loggedIn.emit(true);
+      this.username.emit(data.username);
       return true;
     }));
   }
 
-  refreshToken(): Observable<any> {
-   /* // ! this line is not important however it stops error with invalid token due to sending wrong token in request
-    this.localStorage.clear('authenticationToken');*/
+  logout(): void {
+    this.httpClient.post('http://localhost:8080/api/auth/login', this.refreshTokenPayload, {responseType: 'text'})
+      .subscribe(data => {
+        console.log(data);
+      }, error => {
+        throwError(error);
+      });
 
+    this.localStorage.clear('authenticationToken');
+    this.localStorage.clear('username');
+    this.localStorage.clear('refreshToken');
+    this.localStorage.clear('expiresAt');
+  }
+
+  refreshToken(): Observable<any> {
     const refreshTokenPayload: RefreshTokenPayload = {
       refreshToken: this.getRefreshToken(),
       username: this.getUserName()
